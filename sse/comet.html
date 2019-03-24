@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>comet test</title>
+</head>
+<body>
+<h2>长连接聊天</h2>
+<div>welcome you,<b id="uid"></b>!</div>
+<form onsubmit="onsend();return false;">
+    <input type="text" id="msg"/> <button type="submit" id="sendBtn">发送</button>
+</form>
+<ul id="msgs"></ul>
+</body>
+</html>
+ 
+<script>
+    try{
+        new XMLHttpRequest();
+    }catch(e) {
+        document.write("请使用标准浏览器！")
+    }
+    var uid_dom = document.getElementById('uid');
+    var msg_dom = document.getElementById('msg');
+    var send_dom = document.getElementById('sendBtn');
+    var msgs_dom = document.getElementById('msgs');
+    // 初始化一个用户uid
+    var uid = Math.random().toString(16).split(".")[1];
+    uid_dom.innerText = uid;
+ 
+    function fetch(url,onrecv){
+        var self = arguments.callee;
+        var xhr = new XMLHttpRequest();
+        xhr.open("post",url);
+        // IE8没有onload事件
+        xhr.onreadystatechange = function(){
+            if(this.readyState == 4 && this.status == 200){
+                if(onrecv)
+                    onrecv(xhr.responseText);
+                self(url,onrecv);
+            }
+        };
+        xhr.send();
+    }
+    fetch("/fetching",function(res){
+        msgs_dom.innerHTML = "<li>" + new Date().toLocaleTimeString() + "<br>" + decodeURIComponent(res)   +"</li>" + msgs_dom.innerHTML;
+    });
+ 
+    send_dom.onclick = onsend;
+    function onsend(){
+        if(msg_dom.value==""){
+            return msg_dom.focus();
+        }
+        var xhr = new XMLHttpRequest();
+        xhr.open("post","/chat");
+        xhr.send("msg="+encodeURIComponent(uid+" -> "+msg_dom.value));
+        msg_dom.value = "";
+    }
+</script>
